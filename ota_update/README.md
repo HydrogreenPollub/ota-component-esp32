@@ -7,7 +7,7 @@ Project consists of serial connection between the board and the firmware host, a
 
 ## Serial
 
-Work in progress
+Basic functionality implemented. Feedback on the data received is send back.
 
 ## CAN
 
