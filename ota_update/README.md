@@ -7,9 +7,10 @@ Project consists of serial connection between the board and the firmware host, a
 
 ## Serial
 
-Work in progress
+Basic UART receive implemented.
+Basic UART feedback transmit implemented.
 
 ## CAN
 
-Work in progress
+Basic CAN transmit implemented.
 
