@@ -10,7 +10,6 @@ Project consists of serial connection between the board and the firmware host, a
 Basic UART receive implemented.
 Basic UART feedback transmit implemented.
 
-
 ## CAN
 
 Basic CAN transmit implemented.
