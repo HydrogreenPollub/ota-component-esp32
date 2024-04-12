@@ -16,4 +16,4 @@ CAN omitted.
 
 ## OTA 
 
-Basic OTA task implemented. Need to revise. Logs doesn't show it, but possible stack overflow in the future.
+Basic OTA task implemented. Need to revise. Logs don't show it, but possible stack overflow in the future.
