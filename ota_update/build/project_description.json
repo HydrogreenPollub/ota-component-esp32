@@ -1,7 +1,7 @@
 {
     "version":            "1.1",
     "project_name":       "ota_update",
-    "project_version":    "db34974-dirty",
+    "project_version":    "11ea570-dirty",
     "project_path":       "/home/matqlorens/Projekty/ota-component-esp32/ota_update",
     "idf_path":           "/home/matqlorens/esp/v5.2.1/esp-idf",
     "build_dir":          "/home/matqlorens/Projekty/ota-component-esp32/ota_update/build",
