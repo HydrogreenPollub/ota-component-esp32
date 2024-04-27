@@ -10,14 +10,21 @@
 #include "nvs.h"
 #include "nvs_flash.h"
 #include "sdkconfig.h"
+//#include "components/CANopen/CANopen.h"
+//#include "components/CANopen/CO_config.h"
+//#include "components/CANopen/CO_driver.h"
+//#include "components/CANopen/CO_SDOclient.h"
 
 #define BUF_SIZE 1024 // To update
-#define TAG "ESP32_MASTER" // To update
+#define TAG "ESP32_CLIENT" // To update
 
-//static char ota_write_data[BUF_SIZE + 1] = { 0 };
+TaskHandle_t *ota_task_handle;
+char static *ota_buff;
+CO_SDO_t *sdo;
 
 void ota_task(void *pvParameter)
 {
+    int notify_value; //Value of notification in wait for notify
     esp_err_t err;
     esp_ota_handle_t update_handle = 0 ;
     const esp_partition_t *update_partition = NULL;
@@ -44,15 +51,12 @@ void ota_task(void *pvParameter)
     }
     ESP_LOGI(TAG, "esp_ota_begin succeeded");
 
-    char *ota_buff = (char *)malloc(BUF_SIZE);
-    if (!ota_buff) {
-        ESP_LOGE(TAG, "Memory allocation for firmware update failed");
-        return;
-    }
-
     while (1) {
-        memset(ota_buff, 0, BUF_SIZE);
-        int buff_len = 0; //uart_read_bytes(UART_NUM_1, (uint8_t *)ota_buff, BUF_SIZE, 20 / portTICK_PERIOD_MS); //TO BE REPLACED BY ACTUAL FIRMWARE DATA INPUT
+
+        xTaskNotifyWait(pdFALSE, ULONG_MAX, notify_value, pdMS_TO_TICKS(1000));
+
+        int buff_len = 0;
+
         if (buff_len > 0) {
             err = esp_ota_write( update_handle, (const void *)ota_buff, buff_len);
             if (err != ESP_OK) {
@@ -61,8 +65,6 @@ void ota_task(void *pvParameter)
             }
         } else if (buff_len < 0) { //connection closed
             break;
-        } else {
-            vTaskDelay(1);
         }
     }
 
@@ -82,11 +84,29 @@ void ota_task(void *pvParameter)
         return;
     }
 
-    /*ESP_LOGI(TAG, "Restarting system");
-    esp_restart();*/
+    ESP_LOGI(TAG, "Restarting system");
+    esp_restart();
     return;
 }
 
+
+void sdo_callback(/*CANopen params*/)
+{
+    char *data;
+    data = (char *)malloc(BUF_SIZE);
+    
+    //Need to get the data from the CAN
+
+    ota_buff = (char *)malloc(BUF_SIZE);
+    if (!ota_buff) {
+        ESP_LOGE(TAG, "Memory allocation for firmware update failed");
+        return;
+    }
+    memcpy(ota_buff, data, BUF_SIZE);
+
+    // Notify the OTA task
+    xTaskNotify(ota_task_handle, 0x12, eSetBits);
+}
 
 void app_main(void)
 {
@@ -113,7 +133,8 @@ void app_main(void)
     uart_driver_install(UART_NUM_0, BUF_SIZE * 2, 0, 0, NULL, 0);
 
     //OTA task creation
-    error = xTaskCreate(&ota_task, "ota_task", 8192, NULL, 5, NULL);
+    ota_task_handle = (TaskHandle_t *)malloc(sizeof(TaskHandle_t));
+    error = xTaskCreate(&ota_task, "ota_task", 8192, NULL, 5, ota_task_handle);
     if(error != ESP_OK){
         ESP_LOGE(TAG,"OTA task creation failed");
         return;
